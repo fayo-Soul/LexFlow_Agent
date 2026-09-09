@@ -1,0 +1,120 @@
+# ============================================
+# 法律咨询 RAG 系统 — CI/CD 自动化管线
+# ============================================
+# 触发条件：
+#   - push 到 main/develop 分支
+#   - PR 提交到 main 分支
+#
+# 质量门禁：
+#   1. 单元测试全部通过
+#   2. 基础功能导入正常
+#   3. Docker 镜像可构建
+# ============================================
+
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: "单元测试 & 代码检查"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "设置 Python ${{ matrix.python-version }}"
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: "缓存 pip 依赖"
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: "安装依赖"
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: "检查文件编码（必须为 UTF-8）"
+        run: |
+          echo "检查 Python 文件编码..."
+          find . -name "*.py" -exec file --mime {} \; | grep -v "utf-8" | grep "python" && {
+            echo "[ERROR] 以下文件不是 UTF-8 编码："
+            find . -name "*.py" -exec file --mime {} \; | grep -v "utf-8" | grep "python"
+            exit 1
+          } || echo "所有 Python 文件编码正确（UTF-8）"
+
+      - name: "检查明文密钥泄露"
+        run: |
+          echo "扫描可能的密钥泄露..."
+          # 检查是否包含真实的 API Key 格式（排除 change_me 和模板）
+          if grep -rn --include="*.py" --include="*.ini" --include="*.env" \
+               -E "(sk-[a-zA-Z0-9]{20,}|api_key['\"]?\s*[:=]\s*['\"][a-zA-Z0-9]{16,})" . \
+               | grep -v "change_me" | grep -v ".env.example" | grep -v "__pycache__"; then
+            echo "[ERROR] 可能的密钥泄露！请检查以上文件。"
+            exit 1
+          fi
+          echo "未发现密钥泄露"
+
+      - name: "运行单元测试（不依赖外部服务）"
+        run: |
+          python -m pytest tests/unit/ -v --tb=short
+
+      - name: "运行 integration 测试（仅基础路由，不启动外部服务）"
+        run: |
+          python -m pytest tests/integration/ -v --tb=short
+
+  docker-build:
+    name: "Docker 镜像构建"
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "构建 Docker 镜像"
+        run: |
+          docker build -t fazhitong-api:${{ github.sha }} .
+          echo "Docker 镜像构建成功：fazhitong-api:${{ github.sha }}"
+
+      - name: "验证镜像健康检查"
+        run: |
+          docker run -d --name fazhitong-test \
+            -e MYSQL_HOST=localhost \
+            -e REDIS_HOST=localhost \
+            -e MILVUS_HOST=localhost \
+            -e DASHSCOPE_API_KEY=test \
+            fazhitong-api:${{ github.sha }} \
+            python -c "import fastapi; print('FastAPI 可导入')"
+          docker logs fazhitong-test
+          docker rm -f fazhitong-test
+
+  notify:
+    name: "通知"
+    runs-on: ubuntu-latest
+    needs: [test, docker-build]
+    if: always() && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: "检查结果"
+        run: |
+          if [ "${{ needs.test.result }}" = "success" ] && [ "${{ needs.docker-build.result }}" = "success" ]; then
+            echo "✅ CI 全部通过"
+          else
+            echo "❌ CI 存在失败步骤"
+            exit 1
+          fi

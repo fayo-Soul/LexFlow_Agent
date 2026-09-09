@@ -1,0 +1,48 @@
+services:
+  lexflow-agent:
+    build: .
+    container_name: lexflow-agent
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - lexflow-checkpoints:/app/runtime
+    environment:
+      CHECKPOINT_DB_URL: sqlite:////app/runtime/checkpoints.db
+      LAW_RAG_BASE_URL: http://law-rag:8001
+    depends_on:
+      law-rag:
+        condition: service_healthy
+    restart: unless-stopped
+    mem_limit: 2g
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  law-rag:
+    build: ./law
+    container_name: lexflow-law-rag
+    command: ["uvicorn", "api_server:app", "--host", "0.0.0.0", "--port", "8001"]
+    ports:
+      - "8001:8001"
+    env_file:
+      - ./law/.env.deploy
+    environment:
+      MYSQL_HOST: 192.168.88.100
+      REDIS_HOST: 192.168.88.100
+      MILVUS_HOST: 192.168.88.100
+    volumes:
+      - ./models:/app/rag_qa/models:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/api/v1/health')"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+volumes:
+  lexflow-checkpoints:

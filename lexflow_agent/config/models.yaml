@@ -1,0 +1,52 @@
+# 模型路由配置
+models:
+  primary:
+    name: "deepseek-chat"
+    provider: "deepseek"
+    base_url: "https://api.deepseek.com/v1"
+    api_key_env: "LLM_PRIMARY_API_KEY"
+    supports_function_calling: true
+    supports_json_mode: false
+    temperature: 0.1
+    max_tokens: 4096
+    timeout: 60
+
+  backup:
+    name: "qwen-plus"
+    provider: "openai"
+    base_url: ""
+    api_key_env: "LLM_BACKUP_API_KEY"
+    supports_function_calling: true
+    supports_json_mode: true
+    temperature: 0.1
+    max_tokens: 4096
+    timeout: 60
+
+task_routing:
+  intent_classification:
+    model: "rule"  # rule / local_light / llm
+  material_analysis:
+    model: "primary"
+    fallback: "backup"
+  fact_extraction:
+    model: "primary"
+    fallback: "backup"
+  issue_identification:
+    model: "primary"
+    fallback: "backup"
+  evidence_analysis:
+    model: "primary"
+    fallback: "backup"
+  legal_research:
+    model: "primary"
+    fallback: "backup"
+  strategy_generation:
+    model: "primary"
+    fallback: "backup"
+  document_drafting:
+    model: "primary"
+    fallback: "backup"
+  semantic_review:
+    model: "primary"
+    temperature: 0.3
+    fallback: "backup"

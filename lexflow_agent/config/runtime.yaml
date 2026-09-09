@@ -1,0 +1,26 @@
+# 运行时配置
+runtime:
+  timeout_chain:
+    workflow_total: 1800      # 30min
+    agent_node: 300           # 5min
+    llm_call: 60              # 60s
+    rag_search: 30            # 30s
+    internal_compute: 5       # 5s
+
+  graceful_shutdown:
+    wait_seconds: 30
+    force_exit_after: 60
+
+  concurrency:
+    max_parallel_tasks: 5
+    same_lawyer_serial: true
+
+  memory_budget:
+    max_per_node_mb: 50
+    release_after_node: true
+
+  idempotency:
+    key_ttl_hours: 24
+    completed_return_existing: true
+    running_return_status: true
+    failed_allow_recreate: true

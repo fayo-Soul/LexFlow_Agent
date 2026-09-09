@@ -1,0 +1,43 @@
+# ============================================
+# Docker 构建上下文忽略文件
+# ============================================
+
+# Git
+.git
+.gitignore
+
+# 环境变量（含真实密钥）
+.env
+
+# Python 缓存
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache
+
+# 虚拟环境
+.venv/
+venv/
+
+# IDE
+.idea/
+.vscode/
+
+# 日志
+logs/
+*.log
+
+# 大模型文件（通过 volume 挂载）
+rag_qa/models/
+bert_law_classifier/
+
+# 数据文件（运行时可挂载）
+case_rag/data/raw/
+
+# 文档和计划（非运行时必需）
+ENTERPRISE_HARDENING_PLAN.md
+docs/
+
+# 系统文件
+.DS_Store
+Thumbs.db

@@ -1,0 +1,73 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+checkpoints.db
+data/eval/
+data/annotations/
+*.egg-info/
+dist/
+build/
+.DS_Store
+# 虚拟环境
+.venv/
+.venv-win/
+.venv2/
+__pycache__/
+*.pyc
+*.pyo
+
+# 环境 & 敏感信息
+.env
+.env.local
+
+# IDE
+.idea/
+.vscode/
+
+# 运行时 & 缓存
+checkpoints.db
+checkpoints.db-wal
+checkpoints.runs.db
+.pytest_cache/
+.coverage
+.fuse_hidden*
+
+# 部署产物
+lexflow-deploy.tar.gz
+*.egg-info/
+dist/
+build/
+
+# 大模型权重 (10.6GB 绝对不能传!)
+law/rag_qa/models/
+
+# 数据 (可按需删注释)
+# data/eval/
+# data/annotations/
+
+# macOS
+.DS_Store
+
+# Non-source project materials
+文档/
+resume_work/
+scripts/build_*.py
+scripts/inspect_resume_docx.py
+law/产品需求文档.md
+
+# Local configuration and corpora
+law/config.ini
+law/法律问答.txt
+law/法律条文/
+law/问答对/
+law/bert_balanced.jsonl
+law/case_rag/data/raw/
+law/data/
+law/docs/
+law/ENTERPRISE_HARDENING_PLAN.md
+images/
+*.db
+*.db-wal
+*.sqlite3

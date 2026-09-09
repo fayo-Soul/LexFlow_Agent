@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>律研库 · 律所法律知识库 RAG 系统</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.1/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <style>
+        :root {
+            --primary: #1e3a5f;
+            --primary-light: #2d5a8e;
+            --accent: #c9a227;
+            --accent-light: #e8c547;
+            --bg: #f5f7fa;
+            --surface: #ffffff;
+            --sidebar: #1e3a5f;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --border: #e5e7eb;
+            --user-bubble: #1e3a5f;
+            --ai-bubble: #ffffff;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --radius: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--sidebar);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+
+        .brand {
+            padding: 28px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-light));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: var(--primary);
+        }
+
+        .brand-text h1 {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        .brand-text p {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 2px;
+        }
+
+        .new-chat {
+            margin: 20px 24px;
+            padding: 14px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .new-chat:hover {
+            background: rgba(255, 255, 255, 0.18);
+            transform: translateY(-1px);
+        }
+
+        .history {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 16px 20px;
+        }
+
+        .history-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.5;
+            padding: 16px 8px 8px;
+        }
+
+        .history-item {
+            padding: 12px 14px;
+            margin-bottom: 6px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s;
+            opacity: 0.85;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .history-item:hover,
+        .history-item.active {
+            background: rgba(255, 255, 255, 0.12);
+            opacity: 1;
+        }
+
+        .history-item svg {
+            flex-shrink: 0;
+        }
+
+        .sidebar-footer {
+            padding: 16px 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 12px;
+            opacity: 0.6;
+            text-align: center;
+        }
+
+        /* 主聊天区 */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg);
+            position: relative;
+        }
+
+        .header {
+            height: 70px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            box-shadow: var(--shadow);
+            z-index: 10;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-title h2 {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .domain-tag {
+            padding: 5px 12px;
+            background: rgba(30, 58, 95, 0.08);
+            color: var(--primary);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            border: 1px solid rgba(30, 58, 95, 0.15);
+        }
+
+        .menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--primary);
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 32px 20%;
+            scroll-behavior: smooth;
+        }
+
+        .welcome {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .welcome h2 {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 32px;
+            color: var(--primary);
+            margin-bottom: 16px;
+        }
+
+        .welcome p {
+            color: var(--text-light);
+            font-size: 16px;
+            margin-bottom: 40px;
+        }
+
+        .quick-questions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .quick-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .quick-card:hover {
+            border-color: var(--primary-light);
+            box-shadow: var(--shadow);
+            transform: translateY(-2px);
+        }
+
+        .quick-card h4 {
+            font-size: 14px;
+            color: var(--primary);
+            margin-bottom: 6px;
+        }
+
+        .quick-card p {
+            font-size: 13px;
+            color: var(--text-light);
+            line-height: 1.5;
+        }
+
+        .message {
+            display: flex;
+            gap: 14px;
+            margin-bottom: 28px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .message.ai .avatar {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+        }
+
+        .message.user .avatar {
+            background: var(--accent);
+            color: var(--primary);
+        }
+
+        .bubble {
+            max-width: 80%;
+            padding: 16px 20px;
+            border-radius: var(--radius);
+            line-height: 1.7;
+            font-size: 15px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+
+        .message.ai .bubble {
+            background: var(--ai-bubble);
+            color: var(--text);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.user .bubble {
+            background: var(--user-bubble);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .bubble h1, .bubble h2, .bubble h3 {
+            font-family: 'Noto Serif SC', serif;
+            margin: 16px 0 10px;
+            color: var(--primary);
+        }
+
+        .message.user .bubble h1,
+        .message.user .bubble h2,
+        .message.user .bubble h3 {
+            color: white;
+        }
+
+        .bubble p {
+            margin-bottom: 10px;
+        }
+
+        .bubble ul, .bubble ol {
+            margin: 10px 0 10px 20px;
+        }
+
+        .bubble li {
+            margin-bottom: 6px;
+        }
+
+        .bubble code {
+            background: rgba(30, 58, 95, 0.08);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+            font-size: 13px;
+        }
+
+        .bubble pre {
+            background: #1e293b;
+            border-radius: 10px;
+            padding: 16px;
+            overflow-x: auto;
+            margin: 12px 0;
+        }
+
+        .bubble pre code {
+            background: transparent;
+            color: #e2e8f0;
+            padding: 0;
+        }
+
+        .bubble blockquote {
+            border-left: 4px solid var(--accent);
+            padding-left: 14px;
+            margin: 12px 0;
+            color: var(--text-light);
+        }
+
+        .typing {
+            display: flex;
+            gap: 6px;
+            padding: 8px 4px;
+        }
+
+        .typing span {
+            width: 8px;
+            height: 8px;
+            background: var(--primary-light);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+
+        .typing span:nth-child(1) { animation-delay: -0.32s; }
+        .typing span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        /* 输入区 */
+        .input-area {
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            padding: 20px 20%;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 8px 8px 8px 20px;
+            transition: all 0.2s;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.08);
+        }
+
+        textarea {
+            flex: 1;
+            border: none;
+            background: transparent;
+            resize: none;
+            outline: none;
+            font-family: inherit;
+            font-size: 15px;
+            line-height: 1.5;
+            max-height: 120px;
+            min-height: 24px;
+            padding: 8px 0;
+            color: var(--text);
+        }
+
+        textarea::placeholder {
+            color: var(--text-light);
+        }
+
+        .send-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: none;
+            background: var(--primary);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            background: var(--primary-light);
+            transform: scale(1.05);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .input-tip {
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-light);
+            margin-top: 10px;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 1024px) {
+            .chat-container,
+            .input-area {
+                padding-left: 8%;
+                padding-right: 8%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                z-index: 100;
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .menu-btn {
+                display: block;
+            }
+
+            .chat-container,
+            .input-area {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+
+            .bubble {
+                max-width: 90%;
+            }
+
+            .welcome h2 {
+                font-size: 24px;
+            }
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 99;
+        }
+
+        .overlay.show {
+            display: block;
+        }
+
+        /* 引用来源 */
+        .references {
+            margin-top: 12px;
+            padding: 10px 14px;
+            background: #f8f9fb;
+            border-radius: 8px;
+            font-size: 13px;
+            border-left: 3px solid var(--accent);
+        }
+        .references-title {
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+        .references-item {
+            color: var(--text-light);
+            padding: 2px 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .references-item .tag {
+            font-size: 11px;
+            padding: 1px 6px;
+            border-radius: 4px;
+            background: var(--accent-light);
+            color: #333;
+        }
+        .references-item .score {
+            font-size: 11px;
+            color: #999;
+            margin-left: auto;
+        }
+        .ai-footer {
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--text-light);
+            font-style: italic;
+        }
+        .char-count {
+            position: absolute;
+            right: 52px;
+            bottom: 6px;
+            font-size: 11px;
+            color: var(--text-light);
+            pointer-events: none;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(30, 58, 95, 0.2);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(30, 58, 95, 0.35);
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- 侧边栏 -->
+        <aside class="sidebar" id="sidebar">
+            <div class="brand">
+                <div class="brand-logo">
+                    <div class="brand-icon">⚖</div>
+                    <div class="brand-text">
+                        <h1>律研库</h1>
+                        <p>法律知识库 RAG 系统</p>
+                    </div>
+                </div>
+            </div>
+            <button class="new-chat" onclick="newChat()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                新建研究
+            </button>
+            <div class="history" id="historyList">
+                <div class="history-title">最近对话</div>
+            </div>
+            <div class="sidebar-footer">
+                研究辅助内容须由承办律师核验
+            </div>
+        </aside>
+
+        <!-- 遮罩 -->
+        <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+        <!-- 主聊天区 -->
+        <main class="main">
+            <header class="header">
+                <div class="header-title">
+                    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+                    <h2>法律研究工作台</h2>
+                    <span class="domain-tag" id="domainTag">混合检索</span>
+                </div>
+                <div style="font-size: 13px; color: var(--text-light);">
+                    法规 · 司法解释 · 案例 · 内部资料
+                </div>
+            </header>
+
+            <div class="chat-container" id="chatContainer">
+                <div class="welcome" id="welcome">
+                    <h2>开始法律研究</h2>
+                    <p>输入争议问题或案件事实，系统将从律所知识库检索并生成带引用的研究辅助回答</p>
+                    <div class="quick-questions">
+                        <div class="quick-card" onclick="sendQuick('违法解除劳动合同后，劳动者能否要求继续履行？')">
+                            <h4>劳动争议研究</h4>
+                            <p>检索违法解除相关法条、司法解释及裁判观点</p>
+                        </div>
+                        <div class="quick-card" onclick="sendQuick('未经其他股东同意对外转让有限责任公司股权，转让合同是否有效？')">
+                            <h4>公司法律研究</h4>
+                            <p>查找股权转让规则与相关案例</p>
+                        </div>
+                        <div class="quick-card" onclick="sendQuick('合同解除后违约金条款是否继续有效？')">
+                            <h4>合同争议研究</h4>
+                            <p>整理法律依据及实务裁判观点</p>
+                        </div>
+                        <div class="quick-card" onclick="sendQuick('检索近年竞业限制补偿金争议的相关案例和裁判观点。')">
+                            <h4>案例专题检索</h4>
+                            <p>按自然语言定位相似案例和裁判观点</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-area">
+                <div style="max-width: 900px; margin: 0 auto 10px; display: flex; gap: 8px; align-items: center;">
+                    <label for="scopeSelect" style="font-size: 13px; color: var(--text-light);">检索范围</label>
+                    <select id="scopeSelect" style="border: 1px solid var(--border); background: var(--surface); padding: 7px 10px; border-radius: 6px; color: var(--text);">
+                        <option value="auto">智能选择</option>
+                        <option value="regulation">法规与司法解释</option>
+                        <option value="all">法规、司法解释与案例</option>
+                        <option value="case">案例</option>
+                        <option value="internal">内部资料</option>
+                    </select>
+                    <input id="apiToken" type="password" autocomplete="off" placeholder="内部资料访问令牌"
+                        style="margin-left:auto;border:1px solid var(--border);background:var(--surface);padding:7px 10px;border-radius:6px;color:var(--text);width:180px;">
+                </div>
+                <div class="input-wrapper">
+                    <textarea id="questionInput" rows="1" maxlength="2000" placeholder="输入法律问题、争议焦点或案件事实..." onkeydown="handleKeydown(event)" oninput="updateCharCount()"></textarea>
+                    <div class="char-count"><span id="charCount">0</span>/2000</div>
+                    <button class="send-btn" id="sendBtn" onclick="sendQuestion()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </div>
+                <div class="input-tip">回答仅用于法律研究辅助。使用前请核对引用原文、资料效力状态及案件具体事实。</div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const API_URL = '/api/v1/ask';
+        let isTyping = false;
+        let currentDomain = null;
+        let chatHistory = [];
+        let currentSessionId = Date.now();
+
+        // 配置 marked
+        marked.setOptions({
+            breaks: true,
+            gfm: true,
+            headerIds: false,
+            highlight: function(code, lang) {
+                if (lang && hljs.getLanguage(lang)) {
+                    return hljs.highlight(code, { language: lang }).value;
+                }
+                return hljs.highlightAuto(code).value;
+            }
+        });
+
+        // 自动调整输入框高度
+        const textarea = document.getElementById('questionInput');
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+
+        function handleKeydown(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendQuestion();
+            }
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('overlay').classList.toggle('show');
+        }
+
+        function sendQuick(text) {
+            document.getElementById('questionInput').value = text;
+            sendQuestion();
+        }
+
+        function newChat() {
+            document.getElementById('chatContainer').innerHTML = `
+                <div class="welcome" id="welcome">
+                    <h2>开始法律研究</h2>
+                    <p>输入争议问题或案件事实，系统将从律所知识库检索并生成带引用的研究辅助回答</p>
+                    <div class="quick-questions">
+                        <div class="quick-card" onclick="sendQuick('违法解除劳动合同后，劳动者能否要求继续履行？')">
+                            <h4>劳动争议研究</h4>
+                            <p>检索违法解除相关法条、司法解释及裁判观点</p>
+                        </div>
+                        <div class="quick-card" onclick="sendQuick('未经其他股东同意对外转让有限责任公司股权，转让合同是否有效？')">
+                            <h4>公司法律研究</h4>
+                            <p>查找股权转让规则与相关案例</p>
+                        </div>
+                        <div class="quick-card" onclick="sendQuick('合同解除后违约金条款是否继续有效？')">
+                            <h4>合同争议研究</h4>
+                            <p>整理法律依据及实务裁判观点</p>
+                        </div>
+                        <div class="quick-card" onclick="sendQuick('检索近年竞业限制补偿金争议的相关案例和裁判观点。')">
+                            <h4>案例专题检索</h4>
+                            <p>按自然语言定位相似案例和裁判观点</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('domainTag').style.display = 'none';
+            currentDomain = null;
+            currentSessionId = Date.now();
+            if (window.innerWidth <= 768) toggleSidebar();
+        }
+
+        function addMessage(role, content, isHtml = false) {
+            const container = document.getElementById('chatContainer');
+            const welcome = document.getElementById('welcome');
+            if (welcome) welcome.remove();
+
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${role}`;
+            msgDiv.innerHTML = `
+                <div class="avatar">${role === 'user' ? '👤' : '⚖'}</div>
+                <div class="bubble ${role === 'ai' ? 'ai-bubble-content' : ''}">${isHtml ? content : escapeHtml(content)}</div>
+            `;
+            container.appendChild(msgDiv);
+            scrollToBottom();
+            return msgDiv.querySelector('.bubble');
+        }
+
+        function addTypingIndicator() {
+            const container = document.getElementById('chatContainer');
+            const welcome = document.getElementById('welcome');
+            if (welcome) welcome.remove();
+
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'message ai';
+            msgDiv.id = 'typingIndicator';
+            msgDiv.innerHTML = `
+                <div class="avatar">⚖</div>
+                <div class="bubble">
+                    <div class="typing">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+            `;
+            container.appendChild(msgDiv);
+            scrollToBottom();
+        }
+
+        function removeTypingIndicator() {
+            const el = document.getElementById('typingIndicator');
+            if (el) el.remove();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function scrollToBottom() {
+            const container = document.getElementById('chatContainer');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // 打字机效果
+        function typeWriter(element, html) {
+            return new Promise(resolve => {
+                element.innerHTML = '';
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = html;
+                const textNodes = [];
+
+                function collectNodes(node) {
+                    if (node.nodeType === Node.TEXT_NODE) {
+                        textNodes.push({ node: node, text: node.textContent });
+                        node.textContent = '';
+                    } else if (node.nodeType === Node.ELEMENT_NODE) {
+                        for (const child of Array.from(node.childNodes)) {
+                            collectNodes(child);
+                        }
+                    }
+                }
+
+                collectNodes(tempDiv);
+
+                let i = 0;
+                let nodeIndex = 0;
+                let charIndex = 0;
+
+                function type() {
+                    if (nodeIndex >= textNodes.length) {
+                        element.innerHTML = html;
+                        hljs.highlightAll();
+                        resolve();
+                        return;
+                    }
+
+                    const item = textNodes[nodeIndex];
+                    if (charIndex < item.text.length) {
+                        item.node.textContent += item.text[charIndex];
+                        charIndex++;
+                        element.innerHTML = tempDiv.innerHTML;
+                        scrollToBottom();
+                        setTimeout(type, 12);
+                    } else {
+                        nodeIndex++;
+                        charIndex = 0;
+                        type();
+                    }
+                }
+
+                type();
+            });
+        }
+
+        async function sendQuestion() {
+            const input = document.getElementById('questionInput');
+            const btn = document.getElementById('sendBtn');
+            const question = input.value.trim();
+
+            if (!question || isTyping) return;
+
+            isTyping = true;
+            btn.disabled = true;
+            input.value = '';
+            input.style.height = 'auto';
+
+            // 添加用户消息
+            addMessage('user', question);
+
+            // 添加到历史记录
+            addHistoryItem(question);
+
+            // 显示思考中
+            addTypingIndicator();
+
+            try {
+                const response = await sendWithFallback(question);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                removeTypingIndicator();
+
+                // 渲染 AI 回复（含引用来源）
+                const bubble = addMessage('ai', '');
+                let answerHtml = marked.parse(data.answer || '抱歉，暂时没有获得有效回答。');
+
+                // 引用来源
+                if (data.citations && data.citations.length > 0) {
+                    answerHtml += '<div class="references">';
+                    answerHtml += '<div class="references-title">引用依据</div>';
+                    data.citations.forEach(ref => {
+                        const tagMap = { regulation: '法规', judicial_interpretation: '司法解释', case: '案例', internal: '内部资料' };
+                        const tag = tagMap[ref.source_type] || '资料';
+                        const score = ref.score ? ` <span class="score">相似度: ${(ref.score * 100).toFixed(0)}%</span>` : '';
+                        const location = ref.location ? ` · ${escapeHtml(ref.location)}` : '';
+                        answerHtml += `<details class="references-item"><summary><span class="tag">${tag}</span>[${escapeHtml(ref.citation_id)}] ${escapeHtml(ref.title)}${location}${score}</summary><p style="margin-top:8px;line-height:1.7;color:var(--text-light)">${escapeHtml(ref.quote || '')}</p></details>`;
+                    });
+                    answerHtml += '</div>';
+                }
+
+                // 领域标签
+                if (data.source_filter) {
+                    currentDomain = data.source_filter;
+                    const tag = document.getElementById('domainTag');
+                    tag.textContent = currentDomain;
+                    tag.style.display = 'inline-block';
+                }
+
+                // 免责声明
+                answerHtml += `<div class="ai-footer">${escapeHtml(data.disclaimer || '本回答仅用于法律研究辅助，不构成正式法律意见。')}</div>`;
+
+                await typeWriter(bubble, answerHtml);
+
+            } catch (error) {
+                removeTypingIndicator();
+                let errorMsg = '服务暂时不可用，请稍后重试。如果多次失败，请联系管理员检查后端服务状态。';
+                addMessage('ai', errorMsg);
+            } finally {
+                isTyping = false;
+                btn.disabled = false;
+                input.focus();
+            }
+        }
+
+        async function sendWithFallback(question) {
+            const scopeValue = document.getElementById('scopeSelect').value;
+            const scopeMap = {
+                auto: null,
+                all: ['regulation', 'judicial_interpretation', 'case'],
+                regulation: ['regulation', 'judicial_interpretation'],
+                case: ['case'],
+                internal: ['internal']
+            };
+            const apiToken = document.getElementById('apiToken').value.trim();
+            for (const url of ['/api/v1/ask', '/api/v1/chat']) {
+                try {
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (apiToken) headers.Authorization = `Bearer ${apiToken}`;
+                    const payload = {
+                        question: question,
+                        retrieval_mode: 'hybrid'
+                    };
+                    const selectedScope = scopeMap[scopeValue];
+                    if (selectedScope !== null) payload.scope = selectedScope;
+                    const resp = await fetch(url, {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify(payload)
+                    });
+                    if (resp.ok) return resp;
+                    if (resp.status !== 503 && resp.status !== 404) return resp;
+                } catch (e) {}
+            }
+            throw new Error('All API endpoints unavailable');
+        }
+
+        function updateCharCount() {
+            const input = document.getElementById('questionInput');
+            const count = document.getElementById('charCount');
+            count.textContent = input.value.length;
+        }
+
+        function addHistoryItem(text) {
+            const historyList = document.getElementById('historyList');
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            item.innerHTML = `
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(text)}</span>
+            `;
+            item.onclick = () => {
+                document.getElementById('questionInput').value = text;
+            };
+
+            // 移除 active 状态
+            historyList.querySelectorAll('.history-item').forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
+
+            // 插入到标题之后
+            const title = historyList.querySelector('.history-title');
+            historyList.insertBefore(item, title.nextSibling);
+
+            // 最多保留 10 条
+            const items = historyList.querySelectorAll('.history-item');
+            if (items.length > 10) {
+                items[items.length - 1].remove();
+            }
+        }
+
+        // 页面加载完成后聚焦输入框
+        window.onload = () => {
+            document.getElementById('questionInput').focus();
+        };
+    </script>
+</body>
+</html>

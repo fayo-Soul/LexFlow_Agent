@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Environment files (contain real secrets)
+.env
+
+# Virtual environment
+.venv/
+.conda/
+
+# IDE
+.idea/
+.vscode/
+.claude/
+.agents/
+
+# Logs
+logs/
+*.log
+
+# Test and runtime caches
+.pytest_cache/
+
+# Generated data files
+law_qa_pairs.jsonl
+preprocessed_data.jsonl
+bert_balanced_cleaned.jsonl
+
+# Downloaded model weights and training outputs
+rag_qa/core/bert_results/
+rag_qa/models/
+bert_law_classifier/

@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>LexFlow · 智能案件工作台</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">L</span><span>LexFlow</span></div>
+    <div class="top-actions">
+      <span id="serviceDot" class="status-dot"></span>
+      <span id="serviceText">正在连接服务</span>
+      <button id="newCaseButton" class="button ghost">新建案件</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <p class="eyebrow">WORKFLOW</p>
+      <h1>劳动争议<br>智能分析</h1>
+      <p class="muted">四个专业 Agent 协同处理，从材料理解到文书输出，全程可追溯。</p>
+      <ol id="agentSteps" class="agent-steps">
+        <li data-agent="case_understanding_agent"><span>01</span><div><b>案件理解</b><small>并行材料评审</small></div></li>
+        <li data-agent="legal_research_agent"><span>02</span><div><b>法律研究</b><small>法规与案例 RAG</small></div></li>
+        <li data-agent="case_strategy_agent"><span>03</span><div><b>案件策略</b><small>证据矩阵与 HITL</small></div></li>
+        <li data-agent="document_generation_agent"><span>04</span><div><b>文书生成</b><small>状态机与质量复核</small></div></li>
+      </ol>
+      <div class="secure-note"><span>●</span> 本地安全代理 · Token 不进入浏览器</div>
+    </aside>
+
+    <section class="workspace">
+      <div id="notice" class="notice hidden"></div>
+
+      <section id="createView" class="panel create-panel">
+        <div class="panel-heading">
+          <div><p class="eyebrow">NEW ANALYSIS</p><h2>创建案件分析</h2></div>
+          <div class="heading-actions">
+            <button id="loadDemoButton" class="button secondary" type="button">载入仓库样例</button>
+            <span class="pill">劳动争议 MVP</span>
+          </div>
+        </div>
+        <form id="caseForm">
+          <div class="form-grid">
+            <label>案件编号<input id="caseId" required></label>
+            <label>委托方角色<select id="clientRole"><option value="employee">劳动者</option><option value="employer">用人单位</option></select></label>
+          </div>
+          <label>客户目标<textarea id="clientGoal" rows="2" required>分析公司违法解除劳动合同的风险，并制定赔偿金主张和劳动仲裁方案</textarea></label>
+          <label>案件材料<textarea id="materialText" rows="9" required>张某于2022年3月1日入职某科技公司，月平均工资12000元，双方签订三年劳动合同。2025年1月10日，公司以业务调整为由通知解除劳动合同，当日停止办公权限，未提前三十日书面通知，未支付经济补偿。张某无严重违纪记录。</textarea></label>
+          <div class="form-footer">
+            <span id="materialHint">手工粘贴内容会作为第 1 页材料提交。</span>
+            <button class="button primary" type="submit"><span>开始分析</span><i>→</i></button>
+          </div>
+        </form>
+      </section>
+
+      <section id="runView" class="hidden">
+        <div class="run-header">
+          <div><p class="eyebrow">CASE RUN</p><h2 id="runTitle">案件分析</h2><code id="runId"></code></div>
+          <div class="run-status"><span id="runStatusDot"></span><div><small>当前状态</small><b id="runStatus">准备中</b></div></div>
+        </div>
+
+        <div class="dashboard-grid">
+          <section class="panel progress-card">
+            <div class="card-title"><h3>处理进度</h3><span id="eventCount">0 个事件</span></div>
+            <div id="timeline" class="timeline"><p class="empty">等待 Agent 事件…</p></div>
+          </section>
+
+          <section id="reviewCard" class="panel review-card hidden">
+            <p class="eyebrow">HUMAN REVIEW</p>
+            <h3 id="reviewTitle">等待律师审核</h3>
+            <p id="reviewCopy" class="muted"></p>
+            <textarea id="reviewComment" rows="4" placeholder="填写审核意见（可选）"></textarea>
+            <div class="review-actions">
+              <button id="approveButton" class="button primary">确认并继续</button>
+              <button id="cancelButton" class="button danger">取消任务</button>
+            </div>
+          </section>
+
+          <section id="summaryCard" class="panel summary-card">
+            <div class="card-title"><h3>分析概览</h3><button id="refreshButton" class="icon-button">↻</button></div>
+            <div class="metrics">
+              <div><strong id="factMetric">—</strong><span>案件事实</span></div>
+              <div><strong id="issueMetric">—</strong><span>争议焦点</span></div>
+              <div><strong id="researchMetric">—</strong><span>法律研究</span></div>
+              <div><strong id="draftMetric">—</strong><span>生成文书</span></div>
+            </div>
+          </section>
+        </div>
+
+        <section id="resultPanel" class="panel result-panel hidden">
+          <div class="tabs">
+            <button class="tab active" data-tab="facts">事实与原文</button>
+            <button class="tab" data-tab="evidence">证据映射</button>
+            <button class="tab" data-tab="research">法律研究</button>
+            <button class="tab" data-tab="strategy">主备策略</button>
+            <button class="tab" data-tab="review">审核</button>
+            <button class="tab" data-tab="drafts">文书</button>
+            <button class="tab" data-tab="trace">追踪</button>
+          </div>
+          <div id="resultContent" class="result-content"></div>
+        </section>
+      </section>
+    </section>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>

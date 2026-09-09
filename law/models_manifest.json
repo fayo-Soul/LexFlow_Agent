@@ -1,0 +1,22 @@
+{
+  "bert_law_classifier": {
+    "version": "2026-06-27",
+    "path": "rag_qa/models/bert_law_classifier",
+    "description": "BERT 法律领域分类器（多标签）"
+  },
+  "bge_m3": {
+    "version": "local",
+    "path": "rag_qa/models/bge-m3",
+    "description": "BGE-M3 嵌入模型（稠密+稀疏向量）"
+  },
+  "bge_reranker_large": {
+    "version": "local",
+    "path": "rag_qa/models/bge-reranker-large",
+    "description": "BGE Reranker 重排序模型"
+  },
+  "nlp_bert_document-segmentation_chinese-base": {
+    "version": "local",
+    "path": "rag_qa/models/nlp_bert_document-segmentation_chinese-base",
+    "description": "文档分割模型"
+  }
+}

@@ -1,0 +1,52 @@
+# FastAPI + Agent
+fastapi>=0.115.0
+uvicorn[standard]>=0.34.0
+pydantic>=2.10.0
+pydantic-settings>=2.7.0
+
+# LangGraph
+langgraph>=0.3.0
+langgraph-checkpoint-postgres>=0.1.0
+langgraph-checkpoint-sqlite>=0.1.0
+
+# LLM
+openai>=1.55.0
+httpx>=0.28.0
+
+# Observability
+langsmith>=0.2.0
+
+# Data
+sqlalchemy[asyncio]>=2.0.36
+asyncpg>=0.30.0
+psycopg2-binary>=2.9.10
+
+# Resilience
+tenacity>=9.0.0
+circuitbreaker>=2.0.0
+backoff>=2.2.1
+
+# Cache
+redis>=5.2.0
+cachetools>=5.5.0
+
+# Serialization
+orjson>=3.10.0
+pyyaml>=6.0.2
+
+# Testing
+pytest>=8.3.0
+pytest-asyncio>=0.25.0
+pytest-cov>=6.0.0
+httpx>=0.28.0
+
+# Dev
+loguru>=0.7.2
+rich>=13.9.0
+python-dotenv>=1.0.1
+
+# File parsing
+python-docx>=1.1.0
+
+# Docker / infra
+docker>=7.1.0

@@ -1,0 +1,45 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "lexflow-agent"
+version = "1.1.0"
+description = "LexFlow Agent Engine - 律所多智能体案件分析引擎"
+requires-python = ">=3.12"
+
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.34.0",
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.7.0",
+    "langgraph>=0.3.0",
+    "langgraph-checkpoint-postgres>=0.1.0",
+    "langgraph-checkpoint-sqlite>=0.1.0",
+    "openai>=1.55.0",
+    "httpx>=0.28.0",
+    "sqlalchemy[asyncio]>=2.0.36",
+    "asyncpg>=0.30.0",
+    "tenacity>=9.0.0",
+    "cachetools>=5.5.0",
+    "orjson>=3.10.0",
+    "pyyaml>=6.0.2",
+    "loguru>=0.7.2",
+    "python-dotenv>=1.0.1",
+    "langsmith>=0.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.25.0",
+    "pytest-cov>=6.0.0",
+    "rich>=13.9.0",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["lexflow_agent/tests"]
+
+[tool.coverage.run]
+source = ["lexflow_agent"]

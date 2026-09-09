@@ -1,0 +1,64 @@
+# 降级策略配置
+degradation:
+  validate_input:
+    retryable: false
+    max_retries: 0
+    fallback_action: "raise_error"
+    degrade_mark: ~
+    degrade_level: 0
+
+  analyze_materials:
+    retryable: true
+    max_retries: 3
+    fallback_action: "skip_failed_document"
+    degrade_mark: "material_analysis_degraded"
+    degrade_level: 2
+
+  extract_facts:
+    retryable: true
+    max_retries: 3
+    fallback_action: "empty_fact_list"
+    degrade_mark: "fact_extraction_degraded"
+    degrade_level: 2
+
+  identify_issues:
+    retryable: true
+    max_retries: 3
+    fallback_action: "default_issues"
+    degrade_mark: "issue_identification_degraded"
+    degrade_level: 2
+
+  analyze_evidence:
+    retryable: true
+    max_retries: 3
+    fallback_action: "empty_evidence_matrix"
+    degrade_mark: "evidence_analysis_degraded"
+    degrade_level: 2
+
+  research_law:
+    retryable: true
+    max_retries: 3
+    fallback_action: "mark_research_unavailable"
+    degrade_mark: "legal_research_degraded"
+    degrade_level: 2
+
+  generate_strategy:
+    retryable: true
+    max_retries: 3
+    fallback_action: "mark_strategy_unavailable"
+    degrade_mark: "strategy_generation_degraded"
+    degrade_level: 2
+
+  draft_documents:
+    retryable: true
+    max_retries: 3
+    fallback_action: "mark_draft_unavailable"
+    degrade_mark: "drafting_degraded"
+    degrade_level: 2
+
+  semantic_review:
+    retryable: false
+    max_retries: 0
+    fallback_action: "skip_review"
+    degrade_mark: "semantic_review_skipped"
+    degrade_level: 2

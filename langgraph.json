@@ -1,0 +1,7 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "lexflow-orchestrator": "./lexflow_agent/engine/deployment.py:graph"
+  },
+  "env": ".env"
+}

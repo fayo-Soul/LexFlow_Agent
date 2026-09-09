@@ -1,0 +1,27 @@
+# Pipeline 定义配置
+# 新增 Pipeline 只需在此文件中添加即可，无需修改源码。
+# steps 取值必须与 AgentType 枚举值一致：
+#   case_understanding / legal_research / case_strategy / document_generation
+# 注：法律咨询已收编进统一入口 + legal_research（咨询模式），不再作为独立 Agent。
+
+pipelines:
+  labor_dispute_full:
+    description: "劳动争议完整流程：案件理解 → 法律研究 → 案件策略 → 文书生成"
+    steps:
+      - case_understanding
+      - legal_research
+      - case_strategy
+      - document_generation
+
+  research_fast:
+    description: "研究快速路径：案件理解提取事实 → 法律研究检索法条（跳过人工审核，结果仅供参考）"
+    steps:
+      - case_understanding
+      - legal_research
+
+  strategy_fast:
+    description: "策略快速路径：案件理解 → 法律研究 → 案件策略（跳过人工审核，策略仅供参考）"
+    steps:
+      - case_understanding
+      - legal_research
+      - case_strategy

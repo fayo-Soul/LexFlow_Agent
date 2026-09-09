@@ -1,0 +1,16 @@
+.git
+.agents
+.codex
+.env
+.venv
+.venv2
+.venv-win
+__pycache__
+*.pyc
+.pytest_cache
+EduAgent课件V7.7
+law/法律条文
+law/问答对
+law/.env.deploy
+models
+lexflow-deploy.tar.gz
